@@ -7,9 +7,9 @@ const statusMessage = document.getElementById('status');
 
 // Time configurations in seconds
 const TIMES = {
-    work: 25 * 60,
-    shortBreak: 5 * 60,
-    longBreak: 15 * 60
+    work: 25 * 60,          // 25 minutes
+    shortBreak: 5 * 60,     // 5 minutes
+    longBreak: 15 * 60      // 15 minutes
 };
 
 let timeLeft = TIMES.work;
@@ -25,32 +25,33 @@ function formatTime(seconds) {
 
 function updateDisplay() {
     timerDisplay.textContent = formatTime(timeLeft);
+    // Add visual pulse effect when 1 minute or less remains
+    if (timeLeft <= 60 && timeLeft > 59) {
+        timerDisplay.style.animation = 'pulse 1s infinite';
+    } else {
+        timerDisplay.style.animation = '';
+    }
 }
 
 function setControls(running) {
     isRunning = running;
     startBtn.disabled = running;
     pauseBtn.disabled = !running;
-    // Reset button is always enabled, but functionally it resets the state
     resetBtn.disabled = false;
 }
 
 function startTimer() {
     if (isRunning) return;
 
-    if (timeLeft <= 0) {
-        // Should only happen on reset, but as a safeguard
-        loadMode(currentMode);
-    }
-
     intervalId = setInterval(() => {
         if (timeLeft <= 0) {
             clearInterval(intervalId);
             intervalId = null;
             isRunning = false;
-            statusMessage.textContent = "Time's up! Switch modes.";
+            statusMessage.textContent = "⏰ Time's up! Switch modes.";
             setControls(false);
-            // Logic to switch mode automatically could go here
+            // Switch to next mode automatically
+            switchMode(getNextMode());
             return;
         }
         timeLeft--;
@@ -58,7 +59,7 @@ function startTimer() {
     }, 1000);
 
     setControls(true);
-    statusMessage.textContent = `Focusing on ${currentMode} session...`;
+    statusMessage.textContent = `🎯 Focusing on ${currentMode} session...`;
 }
 
 function pauseTimer() {
@@ -66,24 +67,23 @@ function pauseTimer() {
     clearInterval(intervalId);
     intervalId = null;
     setControls(false);
-    statusMessage.textContent = "Paused. Ready when you are.";
+    statusMessage.textContent = "⏸ Paused. Ready when you are.";
 }
 
 function resetTimer() {
     clearInterval(intervalId);
     intervalId = null;
     setControls(false);
-    loadMode(currentMode); // Reloads time for the current mode
-    statusMessage.textContent = "Ready to focus!";
+    loadMode(currentMode);
+    statusMessage.textContent = "🔄 Timer reset. Ready to focus!";
 }
 
 function loadMode(mode) {
     currentMode = mode;
     timeLeft = TIMES[mode];
     updateDisplay();
-    setControls(false); // Ensure it's stopped when mode changes
+    setControls(false);
     
-    // Update button active states
     modeButtons.forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.mode === mode) {
@@ -91,7 +91,19 @@ function loadMode(mode) {
         }
     });
     
-    statusMessage.textContent = `Set to ${mode} mode. Click Start to begin.`;
+    statusMessage.textContent = `⚙️ Set to ${mode} mode. Click Start to begin.`;
+}
+
+function getNextMode() {
+    const modes = ['work', 'shortBreak', 'longBreak'];
+    const currentIndex = modes.indexOf(currentMode);
+    return modes[(currentIndex + 1) % modes.length];
+}
+
+function switchMode(mode) {
+    // Optional: Add notification sound or visual cue
+    loadMode(mode);
+    startTimer(); // Auto-start next mode
 }
 
 // Event Listeners
@@ -106,7 +118,27 @@ modeButtons.forEach(button => {
     });
 });
 
-// Initial setup on load
+// Keyboard shortcuts
+function handleKeyPress(event) {
+    switch(event.key) {
+        case ' ':
+            event.preventDefault();
+            if (document.activeElement.tagName !== 'BUTTON') {
+                startTimer();
+            }
+            break;
+        case 'p':
+        case 'P':
+            pauseTimer();
+            break;
+        case 'r':
+        case 'R':
+            resetTimer();
+            break;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadMode('work');
+    document.addEventListener('keydown', handleKeyPress);
 });
