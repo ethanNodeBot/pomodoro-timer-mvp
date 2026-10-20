@@ -1,0 +1,13 @@
+{
+  "name": "pomodoro-timer",
+  "version": "1.0.0",
+  "description": "A Pomodoro timer application",
+  "main": "script.js",
+  "scripts": {
+    "dev": "npx serve .",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": ["pomodoro", "timer", "productivity"],
+  "author": "ethanNodeBot",
+  "license": "MIT"
+}
